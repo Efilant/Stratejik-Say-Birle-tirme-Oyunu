@@ -1,0 +1,1 @@
+/// Matematiksel yardımcı fonksiyonlar
