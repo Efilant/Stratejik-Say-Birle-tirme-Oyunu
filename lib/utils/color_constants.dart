@@ -1,14 +1,30 @@
 import 'package:flutter/material.dart';
 
-/// Sayı-blok renk eşleştirmesi (1=Mavi, 2=Yeşil, vb.)
-const Map<int, Color> blockColors = {
-  1: Color(0xFF2196F3),
-  2: Color(0xFF4CAF50),
-  3: Color(0xFFFFEB3B),
-  4: Color(0xFFFF9800),
-  5: Color(0xFF9C27B0),
-  6: Color(0xFFE91E63),
-  7: Color(0xFF00BCD4),
-  8: Color(0xFF795548),
-  9: Color(0xFFF44336),
-};
+/// Sude : UI Tasarım
+class AppColors {
+  static const Color background = Color.fromARGB(255, 27, 17, 52);
+  static const Color foreground = Color(0xFFFAFAFA);
+  static const Color card = Color(0xFF1A1625);
+  static const Color border = Color(0xFF272727);
+  static const Color primary = Color(0xFFFFFFFF);
+
+  static const Map<int, Color> blockColors = {
+    1: Color.fromARGB(255, 0, 208, 255),
+    2: Color.fromARGB(255, 255, 110, 146),
+    3: Color.fromARGB(255, 255, 191, 0),
+    4: Color.fromARGB(255, 0, 255, 64),
+    5: Color.fromARGB(255, 217, 0, 255),
+    6: Color.fromARGB(255, 255, 111, 0),
+    7: Color.fromARGB(255, 0, 255, 191),
+    8: Color.fromARGB(255, 255, 0, 51),
+    9: Color.fromARGB(255, 81, 0, 255),
+  };
+
+  static Color getGlowColor(int value) {
+    final baseColor = blockColors[value] ?? blockColors[1]!;
+    return baseColor.withOpacity(0.5);
+  }
+
+  static Color emptyTileBg = Colors.white.withOpacity(0.05);
+  static Color emptyTileBorder = Colors.white.withOpacity(0.1);
+}
