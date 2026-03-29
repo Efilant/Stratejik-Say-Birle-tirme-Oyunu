@@ -15,7 +15,8 @@ class TargetDisplay extends StatelessWidget {
         color: Colors.amber.shade100,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text('Hedef: $target', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+      child: Text('Hedef: $target',
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
     );
   }
 }

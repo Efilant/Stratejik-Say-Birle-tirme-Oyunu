@@ -9,6 +9,7 @@ class ScoreBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text('Puan: $score', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold));
+    return Text('Puan: $score',
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold));
   }
 }
