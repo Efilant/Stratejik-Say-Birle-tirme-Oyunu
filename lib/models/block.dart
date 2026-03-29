@@ -13,7 +13,9 @@ class Block {
     required this.col,
   });
 
-  Color get color => blockColors[value] ?? Colors.grey;
+  Color get color => AppColors.blockColors[value] ?? Colors.grey;
+
+  Color get glowColor => AppColors.getGlowColor(value);
 
   Block copyWith({int? value, int? row, int? col}) => Block(
         value: value ?? this.value,

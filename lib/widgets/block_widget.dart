@@ -1,77 +1,167 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../utils/color_constants.dart';
 
 /// Renkli blok görünümü — Üye 1 · Elif (temel kutu + sayı).
 /// Seçim çerçevesi ve patlama animasyonu — Üye 2 · Esma.
+/// UI Düzenlemeleri — Üye 4 · Sude.
 class BlockWidget extends StatelessWidget {
-  final int value;
-  final Color? color;
+  final int? value;
   final double size;
-
-  /// Seçim zincirinde mi — Madde 5 görsel geri bildirim (Üye 2)
-  final bool selected;
-
-  /// Hedef tutunca patlama animasyonu
-  final bool exploding;
-
-  /// Patlayan hücre için benzersiz anahtar (ör. 'gen-row-col')
-  final String? explosionKey;
-
-  final Duration explosionDuration;
+  final bool isSelected;
+  final bool isExploding; // Madde 7 için yeni
+  final bool isError; // Madde 8 için yeni
+  final VoidCallback? onTap;
 
   const BlockWidget({
     super.key,
-    required this.value,
-    this.color,
-    this.size = 36,
-    this.selected = false,
-    this.exploding = false,
-    this.explosionKey,
-    this.explosionDuration = const Duration(milliseconds: 420),
+    this.value,
+    this.size = 45,
+    this.isSelected = false,
+    this.isExploding = false,
+    this.isError = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? blockColors[value] ?? Colors.grey;
-    final core = Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: c,
-        borderRadius: BorderRadius.circular(6),
-        border:
-            selected ? Border.all(color: Colors.amberAccent, width: 3) : null,
-        boxShadow: const [
-          BoxShadow(color: Colors.black26, blurRadius: 2, offset: Offset(1, 1)),
-        ],
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        '$value',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: size * 0.5,
+    if (value == null) return _buildEmptyTile();
+
+    final color = AppColors.blockColors[value] ?? Colors.grey;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 200),
+        // Patlıyorsa daha fazla büyür, seçiliyse normal büyür
+        scale: isExploding ? 1.25 : (isSelected ? 1.1 : 1.0),
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              if (isExploding)
+                BoxShadow(
+                  color: Colors.white.withOpacity(0.8),
+                  blurRadius: 25,
+                  spreadRadius: 4,
+                ),
+
+              if (isError)
+                BoxShadow(
+                  color: Colors.red.withOpacity(0.7),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              // Normal Seçim Parlaması
+              if (isSelected && !isExploding && !isError)
+                BoxShadow(
+                  color: color.withOpacity(0.5),
+                  blurRadius: 15,
+                  spreadRadius: 2,
+                ),
+            ],
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Seçim/Hata Çerçevesi (Ring Effect)
+              if (isSelected || isError)
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isError ? Colors.redAccent : Colors.white,
+                        width: 2.5,
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Ana Cam Gövdesi
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    decoration: BoxDecoration(
+                      // Patlıyorsa beyaza, hata varsa kırmızıya döner
+                      color: isExploding
+                          ? Colors.white
+                          : (isError
+                              ? Colors.red.withOpacity(0.8)
+                              : color.withOpacity(0.9)),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(isSelected ? 0.6 : 0.3),
+                        width: 2.0,
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        // Yansıma Efekti
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Colors.white
+                                      .withOpacity(isExploding ? 0.8 : 0.4),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Sayı
+                        Center(
+                          child: Text(
+                            '$value',
+                            style: TextStyle(
+                              // Patlama anında sayı rengi kendi rengine döner
+                              color: isExploding ? color : Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              shadows: [
+                                if (!isExploding)
+                                  const Shadow(
+                                    color: Colors.black26,
+                                    blurRadius: 4,
+                                    offset: Offset(0, 3),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
 
-    if (!exploding) return core;
-
-    // Esma: ölçek + soluklaşma (patlama)
-    return TweenAnimationBuilder<double>(
-      key: ValueKey<String>(explosionKey ?? 'pop-$value'),
-      tween: Tween(begin: 0, end: 1),
-      duration: explosionDuration,
-      curve: Curves.easeIn,
-      builder: (context, t, child) {
-        final scale = 1.0 + 0.65 * t;
-        return Transform.scale(
-          scale: scale,
-          child: Opacity(opacity: 1.0 - t, child: child),
-        );
-      },
-      child: core,
+  Widget _buildEmptyTile() {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
     );
   }
 }
