@@ -2,13 +2,15 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../logic/adjacency_rules.dart';
+import '../logic/target_number_engine.dart';
 import '../models/block.dart';
 import '../models/grid_pos.dart';
 import '../utils/digit_scores.dart';
 
 // ===========================================================================
-// Üye 2 — Esma: seçim sonuç enum’ları, doğrulama, hedef hamlesi, patlama.
+// Üye 2 — Esma: seçim sonuç enum'ları, doğrulama, patlama.
 // Üye 1 — Elif: 8x10 grid, düşen bloklar, spawn / yerleşme.
+// Üye 3 — Meryem: hedef sayı mekanizması (Vize Madde 4) ve hedef üretim sistemi.
 // Üye 4 — Sude: Görsel stabilite, hata yönetimi ve kesintisiz oyun akışı.
 // ===========================================================================
 
@@ -77,7 +79,8 @@ class GameEngine extends ChangeNotifier {
   static const int minSelectionCount = 2;
   static const int maxSelectionCount = 4;
   static const Duration explosionEffectDuration = Duration(milliseconds: 420);
-  static const int minTargetSum = 1;
+  /// Meryem · Üye 3 (Vize Madde 4): en az 2 blok, 1-9 değerler → hedef toplam 2-36.
+  static const int minTargetSum = 2;
   static const int maxTargetSum = 36;
 
   final List<List<Block?>> _grid =
@@ -101,7 +104,7 @@ class GameEngine extends ChangeNotifier {
   List<FallingBlock> get fallingBlocks => List.unmodifiable(_fallingBlocks);
   List<GridPos> get selectedPath => List.unmodifiable(_selectedPath);
 
-  /// Esma: ekran hedefi — seçilen toplam buna eşit olmalı
+  /// Meryem: ekrandaki hedef toplam.
   int get targetSum => _targetSum;
 
   int get score => _score;
@@ -126,9 +129,19 @@ class GameEngine extends ChangeNotifier {
     _spawnNewRow();
   }
 
-  /// Esma: rastgele hedef toplamı (minTargetSum–maxTargetSum)
+  /// Meryem · Üye 3 (Vize Madde 4): hedef sayı üretimi.
+  ///
+  /// Öncelik: mevcut gridde üretilebilen komşu zincir toplamlarından rastgele seçmek.
+  /// Fallback: minTargetSum-maxTargetSum aralığından rastgele sayı.
   void _rollNewTarget() {
-    _targetSum = minTargetSum + _rnd.nextInt(maxTargetSum - minTargetSum + 1);
+    _targetSum = TargetNumberEngine.generateTarget(
+      grid: _grid,
+      rnd: _rnd,
+      minSelectionCount: minSelectionCount,
+      maxSelectionCount: maxSelectionCount,
+      minTargetSum: minTargetSum,
+      maxTargetSum: maxTargetSum,
+    );
   }
 
   /// Esma  & Sude : hamle onayı — doğruysa patlama animasyonu, yanlışsa yanlış seçim

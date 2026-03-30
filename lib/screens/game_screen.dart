@@ -27,12 +27,10 @@ class GameScreen extends StatelessWidget {
               foregroundColor: Colors.white,
             ),
             body: SafeArea(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: Column(
                   children: [
-                    // Üst Panel: Hedef ve (Puan + Restart)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -46,12 +44,9 @@ class GameScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 32),
-                    // Oyun Alanı
+                    const SizedBox(height: 24),
                     const Center(child: GameGrid()),
-
-                    const Spacer(),
-                    // Alt kısımdaki Kontroller (Temizle & Onayla)
+                    const SizedBox(height: 16),
                     _buildBottomControls(context),
                   ],
                 ),
