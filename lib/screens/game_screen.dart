@@ -19,7 +19,7 @@ class GameScreen extends StatelessWidget {
             appBar: AppBar(
               title: const Text(
                 'Stratejik Sayı Birleştirme',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
               centerTitle: true,
               backgroundColor: Colors.transparent,
@@ -28,7 +28,7 @@ class GameScreen extends StatelessWidget {
             ),
             body: SafeArea(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Column(
                   children: [
                     Row(
@@ -44,9 +44,9 @@ class GameScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 12),
                     const Center(child: GameGrid()),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
                     _buildBottomControls(context),
                   ],
                 ),
