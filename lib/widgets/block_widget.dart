@@ -8,7 +8,8 @@ import '../utils/color_constants.dart';
 class BlockWidget extends StatelessWidget {
   final int? value;
   final double size;
-  final bool isSelected;
+  /// Eğer seçiliyse, seçili sıra (0-based). null ise seçili değil.
+  final int? selectedIndex;
   final bool isExploding; // Madde 7 için yeni
   final bool isError; // Madde 8 için yeni
   final VoidCallback? onTap;
@@ -17,7 +18,7 @@ class BlockWidget extends StatelessWidget {
     super.key,
     this.value,
     this.size = 45,
-    this.isSelected = false,
+    this.selectedIndex,
     this.isExploding = false,
     this.isError = false,
     this.onTap,
@@ -28,13 +29,14 @@ class BlockWidget extends StatelessWidget {
     if (value == null) return _buildEmptyTile();
 
     final color = AppColors.blockColors[value] ?? Colors.grey;
+    final bool isSelected = selectedIndex != null;
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedScale(
         duration: const Duration(milliseconds: 200),
         // Patlıyorsa daha fazla büyür, seçiliyse normal büyür
-        scale: isExploding ? 1.25 : (isSelected ? 1.1 : 1.0),
+        scale: isExploding ? 1.25 : (isSelected ? 1.12 : 1.0),
         child: Container(
           width: size,
           height: size,
@@ -54,12 +56,12 @@ class BlockWidget extends StatelessWidget {
                   blurRadius: 20,
                   spreadRadius: 2,
                 ),
-              // Normal Seçim Parlaması
+              // Daha belirgin seçim glow'u
               if (isSelected && !isExploding && !isError)
                 BoxShadow(
-                  color: color.withOpacity(0.5),
-                  blurRadius: 15,
-                  spreadRadius: 2,
+                  color: color.withOpacity(0.75),
+                  blurRadius: 22,
+                  spreadRadius: 3,
                 ),
             ],
           ),
@@ -74,7 +76,7 @@ class BlockWidget extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: isError ? Colors.redAccent : Colors.white,
-                        width: 2.5,
+                        width: isSelected ? 3.0 : 2.5,
                       ),
                     ),
                   ),
@@ -93,10 +95,10 @@ class BlockWidget extends StatelessWidget {
                           ? Colors.white
                           : (isError
                               ? Colors.red.withOpacity(0.8)
-                              : color.withOpacity(0.9)),
+                              : color.withOpacity(0.95)),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: Colors.white.withOpacity(isSelected ? 0.6 : 0.3),
+                        color: Colors.white.withOpacity(isSelected ? 0.8 : 0.35),
                         width: 2.0,
                       ),
                     ),
@@ -111,7 +113,7 @@ class BlockWidget extends StatelessWidget {
                                 end: Alignment.bottomRight,
                                 colors: [
                                   Colors.white
-                                      .withOpacity(isExploding ? 0.8 : 0.4),
+                                      .withOpacity(isExploding ? 0.8 : 0.35),
                                   Colors.transparent,
                                 ],
                               ),
@@ -138,6 +140,35 @@ class BlockWidget extends StatelessWidget {
                             ),
                           ),
                         ),
+
+                        // Seçim sırası rozeti (sağ üst)
+                        if (isSelected)
+                          Positioned(
+                            top: -6,
+                            right: -6,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.black.withOpacity(0.6),
+                                border: Border.all(color: Colors.white, width: 1.0),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.4),
+                                    blurRadius: 6,
+                                  )
+                                ],
+                              ),
+                              child: Text(
+                                '${selectedIndex! + 1}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),

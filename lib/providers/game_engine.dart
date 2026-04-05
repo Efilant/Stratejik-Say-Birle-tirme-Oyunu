@@ -193,6 +193,7 @@ class GameEngine extends ChangeNotifier {
     notifyListeners();
   }
 
+
   /// Esma: doğru hamle sonrası (PDF) — sütunlarda aşağı kayma + üstten 1–9 doldurma
   /// Sude : boşalan yerler rastgele doldurulmaz, sadece mevcut bloklar aşağı kayar.
   void _applyGravityAndRefill() {
