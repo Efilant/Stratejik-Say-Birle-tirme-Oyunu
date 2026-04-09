@@ -14,8 +14,8 @@ class GameGrid extends StatelessWidget {
     return Consumer<GameEngine>(
       builder: (context, engine, _) {
         return LayoutBuilder(builder: (context, constraints) {
-          // spacing between cells
-          const double spacing = 3.0; // slightly smaller spacing to fit more
+          // Hücreler arası boşluklar
+          const double spacing = 3.0; // Izgara alanına daha iyi sığması için daraltıldı
 
           // Use available width to compute cell size. For height, reserve a fraction
           // of screen so grid doesn't overflow other UI. If parent provides tight
@@ -23,7 +23,7 @@ class GameGrid extends StatelessWidget {
           final screenHeight = MediaQuery.of(context).size.height;
           final maxHeightForGrid = constraints.hasBoundedHeight
               ? constraints.maxHeight
-              : screenHeight * 0.85; // increase reserved height so full grid fits
+              : screenHeight * 0.85; // Tam ekran yerleşimi için ayrılan yükseklik
 
           final maxWidth = constraints.maxWidth;
 
@@ -36,7 +36,7 @@ class GameGrid extends StatelessWidget {
           // Apply a small global shrink factor so the grid's minimum size is a bit
           // smaller and more likely to fit on smaller screens.
           final baseCell = cellWidth < cellHeight ? cellWidth : cellHeight;
-          final shrinkFactor = 0.88; // reduce min height/width slightly
+          final shrinkFactor = 0.88; // Küçük ekranlarda sığmayı kolaylaştıran küçültme faktörü
           final cellSize = baseCell * shrinkFactor;
           final gridWidth = GameEngine.cols * cellSize +
               (GameEngine.cols - 1) * spacing;
@@ -100,7 +100,7 @@ class GameGrid extends StatelessWidget {
                     // 3. KATMAN: Düşen Bloklar
                     ...engine.fallingBlocks.where((fb) => fb.row >= 0).map((fb) {
                       return Positioned(
-                        key: ValueKey('falling_${fb.col}_${fb.value}'),
+                        key: ValueKey('falling_${fb.id}'),
                         left: fb.col * (cellSize + spacing),
                         top: fb.row * (cellSize + spacing),
                         child: BlockWidget(

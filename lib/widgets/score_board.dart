@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_engine.dart';
 
-///Üye 4 · Sude : Puan ve Yeni Oyun butonu.
+/// [Sude] tarafından hazırlanan puan tablosu ve oyun sıfırlama bileşeni.
+/// Mevcut puan durumunu, hata sayacını ve yeni oyun butonunu içerir.
 class ScoreBoard extends StatelessWidget {
   final int score;
 
@@ -20,17 +21,35 @@ class ScoreBoard extends StatelessWidget {
           'Puan: $score',
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 22,
+            fontSize: 20, // Font boyutunu küçülttük
             fontWeight: FontWeight.w900,
             letterSpacing: 0.5,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8), // Boşluğu azalttık
+        // Hata Sayacı
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3), // Paddingi daralttık
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.red.withOpacity(0.3)),
+          ),
+          child: Text(
+            'Hata: ${engine.wrongMoveCount}/3',
+            style: const TextStyle(
+              color: Colors.redAccent,
+              fontSize: 12, // Font boyutunu küçülttük
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8), // Boşluğu azalttık
         GestureDetector(
           onTap:
               engine.isResolvingExplosion ? null : () => engine.restartGame(),
           child: Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(8), // İkon paddingini azalttık
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.white.withOpacity(0.15),
@@ -42,7 +61,7 @@ class ScoreBoard extends StatelessWidget {
             child: const Icon(
               Icons.refresh_rounded,
               color: Colors.white,
-              size: 26,
+              size: 20, // İkon boyutunu küçülttük
             ),
           ),
         ),

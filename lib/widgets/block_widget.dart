@@ -2,9 +2,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../utils/color_constants.dart';
 
-/// Renkli blok görünümü — Üye 1 · Elif (temel kutu + sayı).
-/// Seçim çerçevesi ve patlama animasyonu — Üye 2 · Esma.
-/// UI Düzenlemeleri — Üye 4 · Sude.
+/// [Elif], [Esma] ve [Sude] iş birliğiyle hazırlanan görsel blok bileşeni.
+/// Temel kutu tasarımı (Elif), seçim ve patlama animasyonları (Esma) 
+/// ve son UI cilalamaları (Sude) bu birimde toplanmıştır.
 class BlockWidget extends StatelessWidget {
   final int? value;
   final double size;

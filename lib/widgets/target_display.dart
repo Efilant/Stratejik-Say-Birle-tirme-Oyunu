@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-///Üye 4 · Sude : Hedef Sayı göstergesi.
+/// [Sude] tarafından hazırlanan hedef sayı gösterge bileşeni.
+/// Mevcut turda ulaşılması gereken toplam sayıyı vurgular.
 class TargetDisplay extends StatelessWidget {
   final int target;
 

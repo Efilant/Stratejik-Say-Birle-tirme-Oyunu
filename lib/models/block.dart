@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../utils/color_constants.dart';
 
-/// Oyun alanındaki tek blok - sayı ve konum bilgisi
+/// [Elif] tarafından hazırlanan oyun bloğu modeli.
+/// Sayı değerini, grid üzerindeki konumunu ve renk bilgilerini taşır.
 class Block {
   final int value;
   final int row;

@@ -1,9 +1,7 @@
 import '../models/grid_pos.dart';
 
-/// Üye 2 — Esma: blok seçim kuralları — komşuluk algoritması (PDF Madde 6).
-///
-/// PDF Madde 3–4: yatay, dikey ve çapraz komşuluk (8 yön, kendisi hariç).
-/// Bu dosya sadece geometrik kuralı içerir; UI veya oyun döngüsü bilmez.
+/// [Esma] tarafından hazırlanan komşuluk ve seçim zinciri kuralları (PDF Madde 4 & 6).
+/// Yatay, dikey ve çapraz (8 yön) komşuluk ilişkilerini geometrik olarak doğrular.
 class AdjacencyRules {
   AdjacencyRules._();
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// Sude : UI Tasarım
+/// [Sude] tarafından hazırlanan oyun renk teması ve paleti.
+/// Blok renklerini, arka plan ve vurgu renklerini içerir.
 class AppColors {
   static const Color background = Color.fromARGB(255, 27, 17, 52);
   static const Color foreground = Color(0xFFFAFAFA);

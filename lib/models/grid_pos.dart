@@ -1,4 +1,5 @@
-/// Üye 2 — Esma: matristeki bir hücre; seçim zincirinde konum takibi.
+/// [Esma] tarafından hazırlanan grid koordinat modeli.
+/// Matristeki bir hücrenin konumunu tutar ve seçim zincirinde kullanılır.
 class GridPos {
   final int row;
   final int col;

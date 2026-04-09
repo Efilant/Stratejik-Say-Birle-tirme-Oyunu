@@ -5,7 +5,9 @@ import '../widgets/game_grid.dart';
 import '../widgets/score_board.dart';
 import '../widgets/target_display.dart';
 
-/// Ana oyun ekranı: layout — Elif; Provider, onay, Snackbar, yeni oyun — Esma; Görsel UI düzenlemeleri — Sude.
+/// [Elif], [Esma] ve [Sude] iş birliğiyle hazırlanan ana oyun ekranı.
+/// Ekran yerleşimi (Elif), hamle onay ve Snackbar geri bildirimleri (Esma) 
+/// ve son görsel UI düzenlemeleri (Sude) bu birimde gerçekleştirilmiştir.
 class GameScreen extends StatelessWidget {
   const GameScreen({super.key});
 

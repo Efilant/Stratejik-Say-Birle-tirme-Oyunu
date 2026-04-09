@@ -1,126 +1,72 @@
-# Stratejik Sayı Birleştirme - Geliştirme Notları
+# Stratejik Sayı Birleştirme Oyunu
 
-Bu depo, Flutter ile yazılmış bulmaca oyununun kaynak kodunu içerir. Aşağıda son yapılan değişiklikler, çalıştırma talimatları ve iOS yükleme notları yer almaktadır.
+Bu proje, Kocaeli Üniversitesi Yazılım Mühendisliği bölümü **Yazılım Geliştirme 2** dersi kapsamında geliştirilen, strateji ve matematik temelli bir mobil bulmaca oyunudur. 
 
-## Son Değişiklikler (branch: `responsive-grid-fixes`)
-
-- UI: Seçim görselliği geliştirmeleri
-  - Seçilen bloklarda belirgin dış beyaz çerçeve (ring effect) ve parlama (glow) eklendi.
-  - Seçim sırasını gösteren küçük badge (index) eklendi.
-  - `AnimatedScale` kullanılarak seçilen bloklara hafif büyüme (tactile feedback) verildi.
-
-- Grid ve yerleşim (responsive)
-  - `GameGrid` responsive hale getirildi; hücre boyutu `LayoutBuilder` ile hesaplanıyor.
-  - Spacing/padding azaltıldı, hafif bir shrink factor uygulandı; böylece 8×10 grid küçük ekranlara daha iyi sığıyor.
-
-- Görsel-mekanik entegrasyonu
-  - Doğru hamlede patlama animasyonu: başarılı hamlelerde ilgili bloklar büyüyor (scale 1.25) ve beyaz-neon tarzı parlama ile sahadan kaldırılıyor.
-  - Patlama animasyonları sırasında düşme zamanlayıcıları geçici olarak durduruluyor; animasyon bitince düşmeler tekrar başlatılıyor.
-
-Değiştirilen ana dosyalar:
-
-- `lib/widgets/block_widget.dart` — seçim görselleştirmeleri, badge ve patlama animasyonu.
-- `lib/widgets/game_grid.dart` — responsive grid hesaplamaları, `Stack`/`Positioned` ile stabil yerleşim.
-- `lib/providers/game_engine.dart` — patlama ve fall-tick senkronizasyonu.
-
-## Hızlı Çalıştırma (geliştirici/debug)
-
-1. Bağımlılıkları yükleyin:
-
-```bash
-flutter pub get
-```
-
-2. Uygulamayı iOS simülatörde çalıştırın:
-
-```bash
-flutter run -d <simulator-id>
-```
-
-3. Fiziksel iPhone'a debug (development) olarak yüklemek için cihazı bağlayın veya kablosuz olarak görünmesini sağlayın, ardından:
-
-```bash
-flutter run -d <device-id>
-```
-
-Not: Debug yükleme için Apple Developer hesabı veya dağıtım sertifikası gerekmez; ancak cihazınızda "Trust this computer" onayı ve gerekli geliştirici izinlerinin açık olması gerekir.
-
-## Release / IPA Oluşturma Notları
-
-- `flutter build ipa` çalıştırıldığında Xcode ile arşivlenir ve export sırasında Apple Developer hesabı, dağıtım profilleri (provisioning profile) ve dağıtım sertifikası gereklidir.
-- Mevcut proje hâlâ `com.example` bundle identifier içeriyor; App Store/TestFlight dağıtımı için `bundle identifier` ve App Icon/Launch Image gibi meta verilerin değiştirilmesi gerekir.
-
-Özet: debug kurulum için `flutter run` en hızlı yoldur. Kalıcı dağıtım (TestFlight/App Store/Ad-Hoc) için Apple geliştirici erişimi ve uygun provisioning adımları gereklidir.
-
-## Branch ve Commit Durumu
-
-- Son UI ve grid düzeltmeleri `responsive-grid-fixes` branch'inde yapılmış ve daha önce uzak repoya push edilmiştir.
-- Bu README güncellemesi de aynı branch üzerinde commit edilip push edilecektir.
+## 🎮 Oyunun Amacı
+8x10 boyutundaki bir matris üzerinde, komşu olan (yatay, dikey, çapraz) sayı bloklarını birbirine bağlayarak ekranın üstünde gösterilen **Hedef Sayı**'ya ulaşmak ve puan toplamaktır.
 
 ---
 
-Eğer bu README'yi projenin `docs/` dizinine veya proje açıklamasına (README Türkçe/İngilizce split) taşımamı isterseniz söyleyin; ayrıca çalıştırma/cihaz yükleme adımlarını daha ayrıntılı bir "How to test" bölümüne taşıyabilirim.
-# Stratejik Sayı Birleştirme
+## 👥 Proje Ekibi ve Rol Dağılımı
 
-Kocaeli Üniversitesi Yazılım Geliştirme 2 projesi. 8×10 matris üzerinde komşu blokları seçerek hedef sayıya ulaşma oyunu.
-
-**author:** Elif
-
----
-
-## Proje Yapısı
-
-```
-lib/
-├── models/          # Block, Score modelleri
-├── providers/       # GameEngine (oyun mantığı)
-├── screens/         # GameScreen
-├── widgets/         # GameGrid, BlockWidget, ScoreBoard, TargetDisplay
-└── utils/           # Renk sabitleri, yardımcı fonksiyonlar
-```
+| Üye | Rol | Sorumluluklar |
+| :--- | :--- | :--- |
+| **Elif** | Geliştirici | Izgara Yapısı (8x10), Hücre Temelli Düşme Mekaniği ve Fizik Motoru |
+| **Esma** | Geliştirici | Seçim Algoritmaları, Komşuluk Kuralları (8 Yön) ve Patlama Mantığı |
+| **Meryem** | Geliştirici | Adil Hedef Sayı Üretim Motoru (DFS tabanlı) ve Puanlama Tablosu |
+| **Sude** | Geliştirici | Modern UI Tasarımı, Hata Yönetimi, Stabilite ve Görsel Efektler |
 
 ---
 
-## Yapılanlar (Vize - Üye 1)
+## 🚀 Temel Mekanikler (Vize Aşaması)
 
-### Flutter Teknik Mimarisi
-- Provider ile state management
-- modüler klasör yapısı
+### 1. Izgara ve Bloklar
+- Oyun **8 sütun ve 10 satırdan** oluşan dinamik bir matris üzerinde oynanır.
+- Bloklar **1-9** arası rastgele tam sayı değerleri alır.
+- Başlangıçta ızgara, rastgele 3 satır dolu olarak başlar.
 
-### Modeller
-- **Block**: sayı (1–9), satır, sütun, renk
-- **ScoreEntry**: liderlik tablosu için (Final’da kullanılacak)
-- **color_constants**: 1=Mavi, 2=Yeşil, 3=Sarı, vb. sabit palet
+### 2. Akıllı Düşme Sistemi
+- Yeni bloklar üstten **birim birim** hareket ederek düşer.
+- Her 2 saniyede bir, rastgele seçilen müsait bir sütundan 1 adet yeni blok sahaya iner.
+- Bir blok patladığında, üstteki tüm bloklar fizik kurallarına uygun olarak gerçek zamanlı süzülerek alt boşlukları doldurur.
 
-### GameEngine (Grid & Mekanik)
-- **8×10 matris**: `List<List<Block?>>`
-- **Başlangıç**: ilk 3 satır rastgele bloklarla dolu
-- **Blok düşme**: Timer (500ms) ile birim birim aşağı kayma
-- **Tabana yerleşme**: alt hücre dolu veya satır 9’da ise blok yerleşir
-- **Spawn**: her 5 saniyede her sütuna üstten yeni blok
+### 3. Seçim ve Komşuluk Kuralları
+- En az 2, en fazla 4 blok birleştirilebilir.
+- Birleştirilen bloklar birbirine **yatay, dikey veya çapraz** olarak komşu olmalıdır.
+- Seçilen bloklar görsel olarak birbirine bağlanır ve seçim sırası numaralandırılır.
 
-### UI
-- **BlockWidget**: sayıya göre renklendirilmiş blok
-- **GameGrid**: GridView + Stack (yerleşik + düşen bloklar)
-- **GameScreen**: hedef sayı, puan, oyun alanı
+### 4. Hedef Sayı Motoru
+- Hedef sayı, grid üzerinde o an mevcut olan bloklardan elde edilebilecek gerçek senaryolara göre üretilir. Bu sayede oyunun "tıkanması" engellenir.
 
----
-
-## Çalıştırma
-
-```bash
-flutter pub get
-flutter run -d chrome    # Web
-flutter run -d macos     # macOS
-flutter run              # Varsayılan cihaz
-```
+### 5. Hata ve Ceza Mekanizması
+- Yanlış toplam yapıldığında hata sayacı artar.
+- **3. hatalı denemede** ceza olarak tüm sütunlardan aynı anda yeni bloklar indirilir, bu da oyun alanının hızla dolmasına neden olur.
 
 ---
 
-## Sonraki Adımlar (Ekip)
+## 🛠 Teknik Mimari
+- **Framework:** Flutter
+- **State Management:** Provider
+- **Tasarım Dili:** Neon & Glassmorphism Aesthetics
+- **Veri Yapısı:** Multi-dimensional List (Matrix) & Custom Classes
 
-| Üye   | Vize                         | Final                      |
-|-------|------------------------------|----------------------------|
-| Üye 2 | Blok seçimi, komşuluk        | Patlama, puan motoru       |
-| Üye 3 | Hedef sayı, yanlış sayacı    | Hızlanma, SharedPreferences|
-| Üye 4 | Material UI, renk paleti     | Liderlik tablosu, animasyon|
+---
+
+## 📦 Kurulum ve Çalıştırma
+
+Projenin yerel ortamınızda çalıştırılması için Flutter SDK'nın yüklü olması gerekmektedir.
+
+1. Bağımlılıkları indirin:
+   ```bash
+   flutter pub get
+   ```
+
+2. Uygulamayı başlatın:
+   ```bash
+   flutter run
+   ```
+
+---
+
+## 📅 Vize Aşaması Özeti
+Vize gereksinimleri olan "hücre temelli hareket", "ceza mekanizması", "akıllı hedef üretimi" ve "komşuluk kuralları" başarıyla tamamlanmıştır. Tüm kod dokümantasyonu Türkçe olarak standardize edilmiştir.

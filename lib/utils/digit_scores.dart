@@ -1,4 +1,5 @@
-/// Üye 2 — Esma: PDF Madde 5 puan tablosu (blok sayısı → hamle puanı).
+/// [Esma] tarafından hazırlanan puanlama tablosu (PDF Madde 5).
+/// Her blok değerinin patladığında kazandıracağı puanları belirler.
 class DigitScores {
   DigitScores._();
 
