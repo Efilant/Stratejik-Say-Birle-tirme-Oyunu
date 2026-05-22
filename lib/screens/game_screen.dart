@@ -207,10 +207,13 @@ void onConfirmMoveTap(BuildContext context, GameEngine engine) {
             if (!context.mounted) return;
             engine.completeExplosionAfterAnimation();
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            final breakdown = engine.lastMoveScoreBreakdown;
+            final detail = breakdown.isNotEmpty ? ' ($breakdown)' : '';
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content:
-                    Text('Hedef tuttu! +${engine.lastSubmittedMoveGain} puan'),
+                content: Text(
+                  'Hedef tuttu! +${engine.lastSubmittedMoveGain} puan$detail',
+                ),
                 backgroundColor: const Color(0xFF00E676),
                 duration: const Duration(seconds: 2),
               ),
