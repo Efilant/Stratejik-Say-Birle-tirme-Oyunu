@@ -4,10 +4,10 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 
 import '../logic/adjacency_rules.dart';
+import '../logic/move_score_calculator.dart';
 import '../logic/target_number_engine.dart';
 import '../models/block.dart';
 import '../models/grid_pos.dart';
-import '../utils/digit_scores.dart';
 
 // ===========================================================================
 // PROJE EKİBİ VE GÖREV DAĞILIMI
@@ -89,6 +89,7 @@ class GameEngine extends ChangeNotifier {
   int _targetSum = 9;
   int _score = 0;
   int _lastSubmittedMoveGain = 0;
+  String _lastMoveScoreBreakdown = '';
   int _explosionAnimGen = 0;
   bool _isShowingError = false;
   int _wrongMoveCount = 0;
@@ -100,6 +101,7 @@ class GameEngine extends ChangeNotifier {
   int get targetSum => _targetSum;
   int get score => _score;
   int get lastSubmittedMoveGain => _lastSubmittedMoveGain;
+  String get lastMoveScoreBreakdown => _lastMoveScoreBreakdown;
   bool get isResolvingExplosion => _explosionCells.isNotEmpty;
   int get explosionAnimGen => _explosionAnimGen;
   bool get isShowingError => _isShowingError;
@@ -155,6 +157,7 @@ class GameEngine extends ChangeNotifier {
   /// [Esma] ve [Sude] tarafından yönetilen hamle onay süreci.
   SubmitMoveResult submitMove() {
     _lastSubmittedMoveGain = 0;
+    _lastMoveScoreBreakdown = '';
     
     // Önce seçimin temel kurallara uygunluğu denetlenir
     if (validateMoveSelection() != MoveSelectionValidation.ok) {
@@ -191,15 +194,17 @@ class GameEngine extends ChangeNotifier {
     return SubmitMoveResult.explosionStarted;
   }
 
-  /// Animasyon bitiminde blokların gridden silinmesi ve puanlama.
+  /// Animasyon bitiminde blokların gridden silinmesi ve puanlama (PDF Bölüm 5).
   void completeExplosionAfterAnimation() {
     if (_explosionCells.isEmpty) return;
 
-    var gained = 0;
+    final values = <int>[];
     for (final p in _explosionCells) {
       final b = _grid[p.row][p.col];
-      if (b != null) gained += DigitScores.pointsFor(b.value);
+      if (b != null) values.add(b.value);
     }
+    final gained = MoveScoreCalculator.totalForValues(values);
+    _lastMoveScoreBreakdown = MoveScoreCalculator.formatBreakdown(values);
     _score += gained;
 
     // Patlayan hücreleri temizle ve yerçekimini uygula
@@ -224,6 +229,7 @@ class GameEngine extends ChangeNotifier {
     _wrongMoveCount = 0;
     _score = 0;
     _lastSubmittedMoveGain = 0;
+    _lastMoveScoreBreakdown = '';
     
     for (var r = 0; r < rows; r++) {
       for (var c = 0; c < cols; c++) _grid[r][c] = null;

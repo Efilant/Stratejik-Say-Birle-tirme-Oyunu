@@ -1,5 +1,5 @@
-/// [Esma] tarafından hazırlanan puanlama tablosu (PDF Madde 5).
-/// Her blok değerinin patladığında kazandıracağı puanları belirler.
+/// [Esma] tarafından hazırlanan puanlama tablosu (PDF Bölüm 5 / Final Madde 2).
+/// Her sayı (1–9) için sabit puan değeri; hamle puanı bu değerlerin toplamıdır.
 class DigitScores {
   DigitScores._();
 
