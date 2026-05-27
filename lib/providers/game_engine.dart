@@ -15,18 +15,18 @@ import '../models/grid_pos.dart';
 // Üye 1 — Elif: Grid yapısı (8x10), blok düşme mekaniği ve spawn sistemi.
 // Üye 2 — Esma: Seçim algoritmaları, hamle doğrulama ve patlama mantığı.
 // Üye 3 — Meryem: Hedef sayı üretim motoru (Vize Madde 4).
-// Üye 4 — Sude: Görsel stabilite, hata yönetimi ve kesintisiz akış kontrolü.
+// Üye 4 — Sude: Görsel stabilite, hata yönetimi, oyun sonu ve kesintisiz akış kontrolü.
 // ===========================================================================
 
 /// [Esma] tarafından hazırlanan dokunma geri bildirim sonuçları.
 /// Kullanıcı arayüzünde (SnackBar vb.) doğru mesajın gösterilmesini sağlar.
 enum SelectionTapResult {
-  extended,            // Zincire yeni bir komşu eklendi
-  shortened,           // Zincir son adımdan geri alındı
-  cleared,             // Seçim tamamen temizlendi
-  rejectedEmpty,       // Boş hücreye dokunuldu
+  extended, // Zincire yeni bir komşu eklendi
+  shortened, // Zincir son adımdan geri alındı
+  cleared, // Seçim tamamen temizlendi
+  rejectedEmpty, // Boş hücreye dokunuldu
   rejectedNotAdjacent, // Seçilen hücre son elemana komşu değil (PDF Madde 4)
-  rejectedMaxLength,   // Maksimum blok sınırına (4) ulaşıldı
+  rejectedMaxLength, // Maksimum blok sınırına (4) ulaşıldı
 }
 
 /// [Esma] tarafından kurgulanan hamle doğrulama durumları.
@@ -42,7 +42,7 @@ enum MoveSelectionValidation {
 /// Hedef kontrolü ve patlama animasyonu tetikleyicisi.
 enum SubmitMoveResult {
   invalidSelection, // Seçim kriterlere uymuyor
-  wrongSum,         // Toplam hedef sayıdan farklı
+  wrongSum, // Toplam hedef sayıdan farklı
   explosionStarted, // Doğru hamle; patlama süreci başladı
 }
 
@@ -71,21 +71,25 @@ class GameEngine extends ChangeNotifier {
   static const int maxSelectionCount = 4;
   static const int minTargetSum = 2;
   static const int maxTargetSum = 36;
-  
-  static const Duration fallInterval = Duration(milliseconds: 500); // Düşme hızı
-  static const Duration spawnInterval = Duration(seconds: 5); // Yeni blok oluşma sıklığı
-  static const Duration explosionEffectDuration = Duration(milliseconds: 420); // Patlama efekti süresi
+
+  static const Duration fallInterval =
+      Duration(milliseconds: 500); // Düşme hızı
+  static const Duration spawnInterval =
+      Duration(seconds: 5); // Yeni blok oluşma sıklığı
+  static const Duration explosionEffectDuration =
+      Duration(milliseconds: 420); // Patlama efekti süresi
 
   // --- İç Durum (Private State) ---
-  final List<List<Block?>> _grid = List.generate(rows, (_) => List.filled(cols, null));
+  final List<List<Block?>> _grid =
+      List.generate(rows, (_) => List.filled(cols, null));
   final List<FallingBlock> _fallingBlocks = [];
   final List<GridPos> _selectedPath = [];
   final List<GridPos> _explosionCells = [];
   final Random _rnd = Random();
-  
+
   Timer? _fallTimer;
   Timer? _spawnTimer;
-  
+
   int _targetSum = 9;
   int _score = 0;
   int _lastSubmittedMoveGain = 0;
@@ -93,6 +97,7 @@ class GameEngine extends ChangeNotifier {
   int _explosionAnimGen = 0;
   bool _isShowingError = false;
   int _wrongMoveCount = 0;
+  bool _isGameOver = false;
 
   // --- Getters (Arayüz Erişimi) ---
   List<List<Block?>> get grid => _grid;
@@ -106,6 +111,7 @@ class GameEngine extends ChangeNotifier {
   int get explosionAnimGen => _explosionAnimGen;
   bool get isShowingError => _isShowingError;
   int get wrongMoveCount => _wrongMoveCount;
+  bool get isGameOver => _isGameOver;
 
   // --- Yapıcı Metot ve Yaşam Döngüsü ---
   GameEngine() {
@@ -158,7 +164,7 @@ class GameEngine extends ChangeNotifier {
   SubmitMoveResult submitMove() {
     _lastSubmittedMoveGain = 0;
     _lastMoveScoreBreakdown = '';
-    
+
     // Önce seçimin temel kurallara uygunluğu denetlenir
     if (validateMoveSelection() != MoveSelectionValidation.ok) {
       return SubmitMoveResult.invalidSelection;
@@ -174,12 +180,12 @@ class GameEngine extends ChangeNotifier {
       Future.delayed(const Duration(milliseconds: 1000), () {
         _isShowingError = false;
         _selectedPath.clear();
-        
+
         // 3. hatada ceza mekanizmasını tetikle (PDF Madde 4)
         if (_wrongMoveCount >= 3) {
           _applyPenaltyDescending();
         }
-        
+
         notifyListeners();
       });
       return SubmitMoveResult.wrongSum;
@@ -228,13 +234,14 @@ class GameEngine extends ChangeNotifier {
     _isShowingError = false;
     _wrongMoveCount = 0;
     _score = 0;
+    _isGameOver = false;
     _lastSubmittedMoveGain = 0;
     _lastMoveScoreBreakdown = '';
-    
+
     for (var r = 0; r < rows; r++) {
       for (var c = 0; c < cols; c++) _grid[r][c] = null;
     }
-    
+
     _initGrid();
     _rollNewTarget();
     _startTimers();
@@ -246,8 +253,10 @@ class GameEngine extends ChangeNotifier {
 
   /// [Esma] tarafından kurgulanan hücre etkileşim sistemi.
   SelectionTapResult onCellTapped(int row, int col) {
-    if (isResolvingExplosion || _isShowingError) return SelectionTapResult.rejectedEmpty;
-    if (row < 0 || row >= rows || col < 0 || col >= cols) return SelectionTapResult.rejectedEmpty;
+    if (isResolvingExplosion || _isShowingError)
+      return SelectionTapResult.rejectedEmpty;
+    if (row < 0 || row >= rows || col < 0 || col >= cols)
+      return SelectionTapResult.rejectedEmpty;
     if (_grid[row][col] == null) return SelectionTapResult.rejectedEmpty;
 
     final pos = GridPos(row, col);
@@ -258,7 +267,9 @@ class GameEngine extends ChangeNotifier {
       if (existingIndex == _selectedPath.length - 1) {
         _selectedPath.removeLast();
         notifyListeners();
-        return _selectedPath.isEmpty ? SelectionTapResult.cleared : SelectionTapResult.shortened;
+        return _selectedPath.isEmpty
+            ? SelectionTapResult.cleared
+            : SelectionTapResult.shortened;
       }
       _selectedPath.removeRange(existingIndex + 1, _selectedPath.length);
       notifyListeners();
@@ -273,7 +284,8 @@ class GameEngine extends ChangeNotifier {
     }
 
     // Maksimum blok sınırı kontrolü
-    if (_selectedPath.length >= maxSelectionCount) return SelectionTapResult.rejectedMaxLength;
+    if (_selectedPath.length >= maxSelectionCount)
+      return SelectionTapResult.rejectedMaxLength;
 
     // Komşuluk kontrolü (PDF Madde 4) [AdjacencyRules] üzerinden yapılır
     final last = _selectedPath.last;
@@ -288,9 +300,12 @@ class GameEngine extends ChangeNotifier {
 
   /// Mevcut seçimin kurallara (uzunluk ve zincirleme) uygunluğunu teyit eder.
   MoveSelectionValidation validateMoveSelection() {
-    if (_selectedPath.length < minSelectionCount) return MoveSelectionValidation.tooFewBlocks;
-    if (_selectedPath.length > maxSelectionCount) return MoveSelectionValidation.tooManyBlocks;
-    if (!AdjacencyRules.isValidNeighborChain(_selectedPath)) return MoveSelectionValidation.invalidNeighborChain;
+    if (_selectedPath.length < minSelectionCount)
+      return MoveSelectionValidation.tooFewBlocks;
+    if (_selectedPath.length > maxSelectionCount)
+      return MoveSelectionValidation.tooManyBlocks;
+    if (!AdjacencyRules.isValidNeighborChain(_selectedPath))
+      return MoveSelectionValidation.invalidNeighborChain;
     return MoveSelectionValidation.ok;
   }
 
@@ -313,7 +328,8 @@ class GameEngine extends ChangeNotifier {
         if (_grid[r][c] != null && _grid[r + 1][c] == null) {
           final block = _grid[r][c]!;
           _grid[r][c] = null;
-          _fallingBlocks.add(FallingBlock(col: c, row: r.toDouble(), value: block.value));
+          _fallingBlocks
+              .add(FallingBlock(col: c, row: r.toDouble(), value: block.value));
           changed = true;
           // Bu sütundaki üst blokların da düşmesini sağlamak için kırmıyoruz
         }
@@ -327,7 +343,8 @@ class GameEngine extends ChangeNotifier {
   void _applyPenaltyDescending() {
     for (int c = 0; c < cols; c++) {
       // Her sütun için yukarıdan düşecek yeni bir blok oluştur
-      _fallingBlocks.add(FallingBlock(col: c, row: -1, value: _rnd.nextInt(9) + 1));
+      _fallingBlocks
+          .add(FallingBlock(col: c, row: -1, value: _rnd.nextInt(9) + 1));
     }
 
     _wrongMoveCount = 0; // Ceza sonrası sayacı sıfırla
@@ -337,7 +354,8 @@ class GameEngine extends ChangeNotifier {
   /// [Elif] tarafından geliştirilen düşme döngüsü.
   /// Havada duran blokların tabana veya altındaki başka bir bloğa inmesini sağlar.
   void _onFallTick() {
-    if (isResolvingExplosion) return; // Patlama sırasında görsel hata olmaması için duraklat [Sude]
+    if (isResolvingExplosion)
+      return; // Patlama sırasında görsel hata olmaması için duraklat [Sude]
 
     bool changed = false;
     final toSettle = <FallingBlock>[];
@@ -345,7 +363,7 @@ class GameEngine extends ChangeNotifier {
     for (final fb in _fallingBlocks) {
       final nextRow = fb.row + 1;
       final canFall = nextRow < rows && _grid[nextRow.toInt()][fb.col] == null;
-      
+
       if (canFall) {
         fb.row = nextRow;
         changed = true;
@@ -364,6 +382,7 @@ class GameEngine extends ChangeNotifier {
     // Yerçekimini tetikle (yeni boşluklar oluşmuş olabilir veya bloklar yerleşmiş olabilir)
     if (changed) {
       _applyGravityFalling();
+      _checkGameOver();
       notifyListeners();
     }
   }
@@ -373,6 +392,32 @@ class GameEngine extends ChangeNotifier {
     if (r < rows && _grid[r][fb.col] == null) {
       _grid[r][fb.col] = Block(value: fb.value, row: r, col: fb.col);
     }
+  }
+
+  /// Üst satırın tamamen dolup dolmadığını kontrol eder.
+  /// Herhangi bir hücre doluysa oyun biter (Madde 4 — Game Over).
+  void _checkGameOver() {
+    for (int c = 0; c < cols; c++) {
+      if (_grid[0][c] != null) {
+        _isGameOver = true;
+        _fallTimer?.cancel();
+        _spawnTimer?.cancel();
+        notifyListeners();
+        return;
+      }
+    }
+  }
+
+  /// Manuel oyun sonu [Sude] — oyuncu "Oyunu Bitir" butonuna bastığında çağrılır.
+  void endGame() {
+    if (_isGameOver) return;
+    _isGameOver = true;
+    _fallTimer?.cancel();
+    _spawnTimer?.cancel();
+    _selectedPath.clear();
+    _explosionCells.clear();
+    _isShowingError = false;
+    notifyListeners();
   }
 
   /// [Elif] ve [Sude] tarafından hazırlanan periyodik hücre üretim sistemi.
@@ -392,8 +437,9 @@ class GameEngine extends ChangeNotifier {
 
     // Sadece 1 adet rastgele blok üret
     final c = availableCols[_rnd.nextInt(availableCols.length)];
-    _fallingBlocks.add(FallingBlock(col: c, row: -1, value: _rnd.nextInt(9) + 1));
-    
+    _fallingBlocks
+        .add(FallingBlock(col: c, row: -1, value: _rnd.nextInt(9) + 1));
+
     notifyListeners();
   }
 
@@ -409,6 +455,8 @@ class GameEngine extends ChangeNotifier {
     return total;
   }
 
-  bool isCellExploding(int row, int col) => _explosionCells.any((p) => p.row == row && p.col == col);
-  bool isCellSelected(int row, int col) => _selectedPath.any((p) => p.row == row && p.col == col);
+  bool isCellExploding(int row, int col) =>
+      _explosionCells.any((p) => p.row == row && p.col == col);
+  bool isCellSelected(int row, int col) =>
+      _selectedPath.any((p) => p.row == row && p.col == col);
 }
