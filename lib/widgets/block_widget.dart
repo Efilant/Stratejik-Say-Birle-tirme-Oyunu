@@ -3,15 +3,14 @@ import 'package:flutter/material.dart';
 import '../utils/color_constants.dart';
 
 /// [Elif], [Esma] ve [Sude] iş birliğiyle hazırlanan görsel blok bileşeni.
-/// Temel kutu tasarımı (Elif), seçim ve patlama animasyonları (Esma) 
-/// ve son UI cilalamaları (Sude) bu birimde toplanmıştır.
+/// Patlama animasyonu artık [ExplodingBlockWidget] tarafından yönetilmektedir.
 class BlockWidget extends StatelessWidget {
   final int? value;
   final double size;
+
   /// Eğer seçiliyse, seçili sıra (0-based). null ise seçili değil.
   final int? selectedIndex;
-  final bool isExploding; // Madde 7 için yeni
-  final bool isError; // Madde 8 için yeni
+  final bool isError;
   final VoidCallback? onTap;
 
   const BlockWidget({
@@ -19,7 +18,6 @@ class BlockWidget extends StatelessWidget {
     this.value,
     this.size = 45,
     this.selectedIndex,
-    this.isExploding = false,
     this.isError = false,
     this.onTap,
   });
@@ -34,30 +32,21 @@ class BlockWidget extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedScale(
-        duration: const Duration(milliseconds: 200),
-        // Patlıyorsa daha fazla büyür, seçiliyse normal büyür
-        scale: isExploding ? 1.25 : (isSelected ? 1.12 : 1.0),
+        duration: const Duration(milliseconds: 180),
+        scale: isSelected ? 1.10 : 1.0,
         child: Container(
           width: size,
           height: size,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
-              if (isExploding)
-                BoxShadow(
-                  color: Colors.white.withOpacity(0.8),
-                  blurRadius: 25,
-                  spreadRadius: 4,
-                ),
-
               if (isError)
                 BoxShadow(
                   color: Colors.red.withOpacity(0.7),
                   blurRadius: 20,
                   spreadRadius: 2,
                 ),
-              // Daha belirgin seçim glow'u
-              if (isSelected && !isExploding && !isError)
+              if (isSelected && !isError)
                 BoxShadow(
                   color: color.withOpacity(0.75),
                   blurRadius: 22,
@@ -68,7 +57,7 @@ class BlockWidget extends StatelessWidget {
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              // Seçim/Hata Çerçevesi (Ring Effect)
+              // Seçim/Hata çerçevesi
               if (isSelected || isError)
                 Positioned.fill(
                   child: Container(
@@ -82,29 +71,27 @@ class BlockWidget extends StatelessWidget {
                   ),
                 ),
 
-              // Ana Cam Gövdesi
+              // Ana cam gövdesi
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
+                    duration: const Duration(milliseconds: 180),
                     decoration: BoxDecoration(
-                      // Patlıyorsa beyaza, hata varsa kırmızıya döner
-                      color: isExploding
-                          ? Colors.white
-                          : (isError
-                              ? Colors.red.withOpacity(0.8)
-                              : color.withOpacity(0.95)),
+                      color: isError
+                          ? Colors.red.withOpacity(0.8)
+                          : color.withOpacity(0.95),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: Colors.white.withOpacity(isSelected ? 0.8 : 0.35),
+                        color:
+                            Colors.white.withOpacity(isSelected ? 0.8 : 0.35),
                         width: 2.0,
                       ),
                     ),
                     child: Stack(
                       children: [
-                        // Yansıma Efekti
+                        // Yansıma efekti
                         Positioned.fill(
                           child: Container(
                             decoration: BoxDecoration(
@@ -112,8 +99,7 @@ class BlockWidget extends StatelessWidget {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  Colors.white
-                                      .withOpacity(isExploding ? 0.8 : 0.35),
+                                  Colors.white.withOpacity(0.35),
                                   Colors.transparent,
                                 ],
                               ),
@@ -124,24 +110,21 @@ class BlockWidget extends StatelessWidget {
                         Center(
                           child: Text(
                             '$value',
-                            style: TextStyle(
-                              // Patlama anında sayı rengi kendi rengine döner
-                              color: isExploding ? color : Colors.white,
+                            style: const TextStyle(
+                              color: Colors.white,
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
                               shadows: [
-                                if (!isExploding)
-                                  const Shadow(
-                                    color: Colors.black26,
-                                    blurRadius: 4,
-                                    offset: Offset(0, 3),
-                                  ),
+                                Shadow(
+                                  color: Colors.black26,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 3),
+                                ),
                               ],
                             ),
                           ),
                         ),
-
-                        // Seçim sırası rozeti (sağ üst)
+                        // Seçim sırası rozeti
                         if (isSelected)
                           Positioned(
                             top: -6,
@@ -151,7 +134,8 @@ class BlockWidget extends StatelessWidget {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: Colors.black.withOpacity(0.6),
-                                border: Border.all(color: Colors.white, width: 1.0),
+                                border:
+                                    Border.all(color: Colors.white, width: 1.0),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.4),
