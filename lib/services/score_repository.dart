@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Sude - Oyun Skoru
-/// Tek bir skor kaydını temsil eder.
+/// 3. görev kişisi meryem — Final Aşaması Madde 5:
+/// shared_preferences içinde tutulan tek bir skor kaydını temsil eder.
 class ScoreEntry {
   final int score;
   final DateTime playedAt;
@@ -20,7 +20,8 @@ class ScoreEntry {
       );
 }
 
-/// Skoru [SharedPreferences]'a kaydeden ve yüksekten düşüğe sıralı listeyi döndüren servis sınıfı.
+/// 3. görev kişisi meryem — Final Aşaması Madde 5:
+/// Skoru [SharedPreferences]'a kaydeder ve listeyi yüksekten düşüğe döndürür.
 class ScoreRepository {
   static const String _key = 'leaderboard_scores';
   static const int _maxStored = 100;
