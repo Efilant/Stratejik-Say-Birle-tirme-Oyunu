@@ -74,8 +74,8 @@ class GameEngine extends ChangeNotifier {
 
   static const Duration fallInterval =
       Duration(milliseconds: 500); // Düşme hızı
-  static const Duration spawnInterval =
-      Duration(seconds: 5); // Yeni blok oluşma sıklığı
+  static const Duration initialSpawnInterval =
+      Duration(seconds: 5); // Başlangıç blok üretim sıklığı
   static const Duration explosionEffectDuration =
       Duration(milliseconds: 420); // Patlama efekti süresi
 
@@ -98,6 +98,7 @@ class GameEngine extends ChangeNotifier {
   bool _isShowingError = false;
   int _wrongMoveCount = 0;
   bool _isGameOver = false;
+  Duration _currentSpawnInterval = initialSpawnInterval;
 
   // --- Getters (Arayüz Erişimi) ---
   List<List<Block?>> get grid => _grid;
@@ -112,6 +113,7 @@ class GameEngine extends ChangeNotifier {
   bool get isShowingError => _isShowingError;
   int get wrongMoveCount => _wrongMoveCount;
   bool get isGameOver => _isGameOver;
+  Duration get currentSpawnInterval => _currentSpawnInterval;
 
   // --- Yapıcı Metot ve Yaşam Döngüsü ---
   GameEngine() {
@@ -142,7 +144,34 @@ class GameEngine extends ChangeNotifier {
 
   void _startTimers() {
     _fallTimer = Timer.periodic(fallInterval, (_) => _onFallTick());
-    _spawnTimer = Timer.periodic(spawnInterval, (_) => _spawnNewBlocks());
+    _restartSpawnTimer();
+  }
+
+  void _restartSpawnTimer() {
+    _spawnTimer?.cancel();
+    _spawnTimer =
+        Timer.periodic(_currentSpawnInterval, (_) => _spawnNewBlocks());
+  }
+
+  /// 3. görev kişisi meryem — Final Aşaması Madde 3:
+  /// Toplam puana göre oyunun blok üretim süresini 5 sn'den 1 sn'ye düşürür.
+  static Duration spawnIntervalForScore(int totalScore) {
+    if (totalScore >= 400) return const Duration(seconds: 1);
+    if (totalScore >= 300) return const Duration(seconds: 2);
+    if (totalScore >= 200) return const Duration(seconds: 3);
+    if (totalScore >= 100) return const Duration(seconds: 4);
+    return initialSpawnInterval;
+  }
+
+  /// 3. görev kişisi meryem — Final Aşaması Madde 3:
+  /// Puan eşiği değişirse spawn timer'ı yeni hızla yeniden başlatır.
+  void _updateDifficultyFromScore() {
+    final nextInterval = spawnIntervalForScore(_score);
+    if (nextInterval == _currentSpawnInterval) return;
+    _currentSpawnInterval = nextInterval;
+    if (!_isGameOver) {
+      _restartSpawnTimer();
+    }
   }
 
   /// [Meryem] tarafından geliştirilen hedef sayı üretim sistemi.
@@ -212,6 +241,7 @@ class GameEngine extends ChangeNotifier {
     final gained = MoveScoreCalculator.totalForValues(values);
     _lastMoveScoreBreakdown = MoveScoreCalculator.formatBreakdown(values);
     _score += gained;
+    _updateDifficultyFromScore();
 
     // Patlayan hücreleri temizle ve yerçekimini uygula
     for (final p in _explosionCells) {
@@ -235,6 +265,7 @@ class GameEngine extends ChangeNotifier {
     _wrongMoveCount = 0;
     _score = 0;
     _isGameOver = false;
+    _currentSpawnInterval = initialSpawnInterval;
     _lastSubmittedMoveGain = 0;
     _lastMoveScoreBreakdown = '';
 
