@@ -121,7 +121,6 @@ class _GameOverCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Başlık ──────────────────────────────────────────────────────
           const Text(
             'Oyun Bitti!',
             style: TextStyle(
@@ -141,8 +140,6 @@ class _GameOverCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-
-          // ── Final Puanı ──────────────────────────────────────────────────
           Text(
             'Final Puanı',
             style: TextStyle(
@@ -170,19 +167,13 @@ class _GameOverCard extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
-
           const SizedBox(height: 24),
-
-          // ── En İyi 5 Skor ────────────────────────────────────────────────
           _TopScoresSection(
             topScoresFuture: topScoresFuture,
             currentPlayerName: playerName,
             currentScore: score,
           ),
-
           const SizedBox(height: 24),
-
-          // ── Tekrar Oyna ──────────────────────────────────────────────────
           SizedBox(
             width: double.infinity,
             child: GestureDetector(
@@ -242,7 +233,6 @@ class _TopScoresSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Bölüm başlığı
         Row(
           children: [
             const Icon(Icons.emoji_events_rounded,
@@ -260,12 +250,8 @@ class _TopScoresSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-
-        // Ayırıcı çizgi
         Divider(color: Colors.white.withOpacity(0.10), height: 1),
         const SizedBox(height: 10),
-
-        // Liste
         FutureBuilder<List<ScoreEntry>>(
           future: topScoresFuture,
           builder: (context, snap) {
@@ -301,7 +287,6 @@ class _TopScoresSection extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 7),
                   child: Row(
                     children: [
-                      // Sıra / madalya
                       SizedBox(
                         width: 28,
                         child: medal != null
@@ -319,8 +304,6 @@ class _TopScoresSection extends StatelessWidget {
                               ),
                       ),
                       const SizedBox(width: 6),
-
-                      // Skor çubuğu arkaplanı
                       Expanded(
                         child: Container(
                           padding: const EdgeInsets.symmetric(
