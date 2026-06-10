@@ -10,7 +10,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'screens/game_screen.dart';
+import 'screens/welcome_screen.dart';
 import 'utils/color_constants.dart';
 
 void main() {
@@ -62,7 +62,8 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const GameScreen(),
+      // Meryem — Oyun öncesi giriş sayfası (oyuncu adı alımı)
+      home: const WelcomeScreen(),
     );
   }
 }

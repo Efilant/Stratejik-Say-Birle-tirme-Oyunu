@@ -10,7 +10,10 @@ import '../widgets/target_display.dart';
 /// Ekran yerleşimi (Elif), hamle onay ve Snackbar geri bildirimleri (Esma)
 /// ve son görsel UI düzenlemeleri (Sude) bu birimde gerçekleştirilmiştir.
 class GameScreen extends StatelessWidget {
-  const GameScreen({super.key});
+  /// Meryem — Giriş sayfasından alınan oyuncu adı.
+  final String playerName;
+
+  const GameScreen({super.key, required this.playerName});
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +23,9 @@ class GameScreen extends StatelessWidget {
         builder: (context) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text(
-                'Stratejik Sayı Birleştirme',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              title: Text(
+                playerName,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
               centerTitle: true,
               backgroundColor: Colors.transparent,
@@ -57,8 +60,8 @@ class GameScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Oyun Sonu Overlay — Madde 4
-                  const GameOverOverlay(),
+                  // Meryem — Oyun sonu: oyuncu adı ile skor kaydı
+                  GameOverOverlay(playerName: playerName),
                 ],
               ),
             ),

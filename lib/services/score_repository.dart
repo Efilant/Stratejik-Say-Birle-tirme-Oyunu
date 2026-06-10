@@ -1,50 +1,89 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 3. görev kişisi meryem — Final Aşaması Madde 5:
-/// shared_preferences içinde tutulan tek bir skor kaydını temsil eder.
+/// Meryem — shared_preferences içinde tutulan skor kaydı (oyuncu adı + puan).
 class ScoreEntry {
+  final String playerName;
   final int score;
   final DateTime playedAt;
 
-  const ScoreEntry({required this.score, required this.playedAt});
+  const ScoreEntry({
+    required this.playerName,
+    required this.score,
+    required this.playedAt,
+  });
 
   Map<String, dynamic> toJson() => {
+        'playerName': playerName,
         'score': score,
         'playedAt': playedAt.toIso8601String(),
       };
 
   factory ScoreEntry.fromJson(Map<String, dynamic> json) => ScoreEntry(
+        playerName: (json['playerName'] as String?)?.trim().isNotEmpty == true
+            ? (json['playerName'] as String).trim()
+            : 'Oyuncu',
         score: json['score'] as int,
         playedAt: DateTime.parse(json['playedAt'] as String),
       );
 }
 
-/// 3. görev kişisi meryem — Final Aşaması Madde 5:
-/// Skoru [SharedPreferences]'a kaydeder ve listeyi yüksekten düşüğe döndürür.
+/// Meryem — Skoru [SharedPreferences]'a kaydeder ve sıralı listeyi döndürür.
 class ScoreRepository {
   static const String _key = 'leaderboard_scores';
   static const int _maxStored = 100;
 
-  /// Yeni skoru kaydeder.
-  static Future<void> saveScore(int score) async {
+  /// Meryem — Oyuncu adı ile yeni skoru kaydeder.
+  static Future<void> saveScore({
+    required String playerName,
+    required int score,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final entries = await _loadAll(prefs);
-    entries.add(ScoreEntry(score: score, playedAt: DateTime.now()));
-    entries.sort((a, b) => b.score.compareTo(a.score));
+    entries.add(ScoreEntry(
+      playerName: playerName.trim(),
+      score: score,
+      playedAt: DateTime.now(),
+    ));
+    entries.sort(_compareByScoreDesc);
     final trimmed = entries.take(_maxStored).toList();
     await prefs.setString(
         _key, jsonEncode(trimmed.map((e) => e.toJson()).toList()));
   }
 
-  /// Kayıtlı skorları yüksekten düşüğe döndürür.
+  /// Meryem — Oyun sonu için: puana göre yüksekten düşüğe.
   static Future<List<ScoreEntry>> loadScores({int? limit}) async {
     final prefs = await SharedPreferences.getInstance();
     final entries = await _loadAll(prefs);
+    entries.sort(_compareByScoreDesc);
     if (limit != null && entries.length > limit) {
       return entries.sublist(0, limit);
     }
     return entries;
+  }
+
+  /// Meryem — Giriş sayfası için: oyuncu adına göre alfabetik sıralama.
+  static Future<List<ScoreEntry>> loadScoresSortedByName({int? limit}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final entries = await _loadAll(prefs);
+    entries.sort(_compareByNameAsc);
+    if (limit != null && entries.length > limit) {
+      return entries.sublist(0, limit);
+    }
+    return entries;
+  }
+
+  static int _compareByScoreDesc(ScoreEntry a, ScoreEntry b) {
+    final scoreCompare = b.score.compareTo(a.score);
+    if (scoreCompare != 0) return scoreCompare;
+    return a.playerName.toLowerCase().compareTo(b.playerName.toLowerCase());
+  }
+
+  static int _compareByNameAsc(ScoreEntry a, ScoreEntry b) {
+    final nameCompare =
+        a.playerName.toLowerCase().compareTo(b.playerName.toLowerCase());
+    if (nameCompare != 0) return nameCompare;
+    return b.score.compareTo(a.score);
   }
 
   static Future<List<ScoreEntry>> _loadAll(SharedPreferences prefs) async {
@@ -52,11 +91,9 @@ class ScoreRepository {
     if (raw == null) return [];
     try {
       final list = jsonDecode(raw) as List<dynamic>;
-      final entries = list
+      return list
           .map((e) => ScoreEntry.fromJson(e as Map<String, dynamic>))
           .toList();
-      entries.sort((a, b) => b.score.compareTo(a.score));
-      return entries;
     } catch (_) {
       return [];
     }

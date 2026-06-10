@@ -3,10 +3,12 @@ import 'package:provider/provider.dart';
 import '../providers/game_engine.dart';
 import '../services/score_repository.dart';
 
-/// [Sude] Oyun sonu overlay'i.
-/// Skoru kaydeder ve kart içinde en yüksek 5 skoru gösterir.
+/// Meryem — Oyun sonu overlay'i.
+/// Oyuncu adı ile skoru kaydeder ve isimli skor tablosunu gösterir.
 class GameOverOverlay extends StatefulWidget {
-  const GameOverOverlay({super.key});
+  final String playerName;
+
+  const GameOverOverlay({super.key, required this.playerName});
 
   @override
   State<GameOverOverlay> createState() => _GameOverOverlayState();
@@ -27,9 +29,12 @@ class _GameOverOverlayState extends State<GameOverOverlay> {
   Future<List<ScoreEntry>> _saveAndLoad(int score) async {
     if (!_scoreSaved) {
       _scoreSaved = true;
-      await ScoreRepository.saveScore(score);
+      await ScoreRepository.saveScore(
+        playerName: widget.playerName,
+        score: score,
+      );
     }
-    return ScoreRepository.loadScores(limit: 5);
+    return ScoreRepository.loadScoresSortedByName(limit: 5);
   }
 
   @override
@@ -54,6 +59,7 @@ class _GameOverOverlayState extends State<GameOverOverlay> {
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: _GameOverCard(
+                    playerName: widget.playerName,
                     score: engine.score,
                     levelLabel: _levelLabel(engine.score),
                     topScoresFuture: _topScoresFuture!,
@@ -72,12 +78,14 @@ class _GameOverOverlayState extends State<GameOverOverlay> {
 // ---------------------------------------------------------------------------
 
 class _GameOverCard extends StatelessWidget {
+  final String playerName;
   final int score;
   final String levelLabel;
   final Future<List<ScoreEntry>> topScoresFuture;
   final VoidCallback onRestart;
 
   const _GameOverCard({
+    required this.playerName,
     required this.score,
     required this.levelLabel,
     required this.topScoresFuture,
@@ -123,6 +131,15 @@ class _GameOverCard extends StatelessWidget {
               letterSpacing: 0.5,
             ),
           ),
+          const SizedBox(height: 8),
+          Text(
+            playerName,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.75),
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 16),
 
           // ── Final Puanı ──────────────────────────────────────────────────
@@ -158,7 +175,10 @@ class _GameOverCard extends StatelessWidget {
 
           // ── En İyi 5 Skor ────────────────────────────────────────────────
           _TopScoresSection(
-              topScoresFuture: topScoresFuture, currentScore: score),
+            topScoresFuture: topScoresFuture,
+            currentPlayerName: playerName,
+            currentScore: score,
+          ),
 
           const SizedBox(height: 24),
 
@@ -206,10 +226,12 @@ class _GameOverCard extends StatelessWidget {
 
 class _TopScoresSection extends StatelessWidget {
   final Future<List<ScoreEntry>> topScoresFuture;
+  final String currentPlayerName;
   final int currentScore;
 
   const _TopScoresSection({
     required this.topScoresFuture,
+    required this.currentPlayerName,
     required this.currentScore,
   });
 
@@ -227,7 +249,7 @@ class _TopScoresSection extends StatelessWidget {
                 color: Color(0xFFFFD600), size: 16),
             const SizedBox(width: 6),
             Text(
-              'En İyi 5 Skor',
+              'Skor Tablosu (İsme Göre)',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.80),
                 fontSize: 13,
@@ -271,7 +293,8 @@ class _TopScoresSection extends StatelessWidget {
             return Column(
               children: List.generate(scores.length, (i) {
                 final entry = scores[i];
-                final isCurrentGame = entry.score == currentScore;
+                final isCurrentGame = entry.playerName == currentPlayerName &&
+                    entry.score == currentScore;
                 final medal = i < 3 ? _medals[i] : null;
 
                 return Padding(
@@ -317,27 +340,21 @@ class _TopScoresSection extends StatelessWidget {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              // "Bu oyun" etiketi
-                              if (isCurrentGame)
-                                Text(
-                                  'Bu oyun',
+                              Expanded(
+                                child: Text(
+                                  entry.playerName,
                                   style: TextStyle(
-                                    color: const Color(0xFFFFD600)
-                                        .withOpacity(0.80),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
+                                    color: isCurrentGame
+                                        ? const Color(0xFFFFD600)
+                                            .withOpacity(0.90)
+                                        : Colors.white.withOpacity(0.85),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
                                   ),
-                                )
-                              else
-                                Text(
-                                  _relativeDate(entry.playedAt),
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.40),
-                                    fontSize: 11,
-                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-
-                              // Puan
+                              ),
+                              const SizedBox(width: 8),
                               Text(
                                 '${entry.score}',
                                 style: TextStyle(
@@ -361,14 +378,5 @@ class _TopScoresSection extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  static String _relativeDate(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'Az önce';
-    if (diff.inHours < 1) return '${diff.inMinutes} dk önce';
-    if (diff.inDays < 1) return '${diff.inHours} sa önce';
-    return '${dt.day.toString().padLeft(2, '0')}.'
-        '${dt.month.toString().padLeft(2, '0')}';
   }
 }
