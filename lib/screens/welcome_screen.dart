@@ -16,11 +16,22 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   final _nameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   Future<List<ScoreEntry>>? _scoresFuture;
+  int _leaderboardRefreshKey = 0;
 
   @override
   void initState() {
     super.initState();
-    _scoresFuture = ScoreRepository.loadScoresSortedByName();
+    _scoresFuture = ScoreRepository.loadScores();
+  }
+
+  /// Meryem — Ana sayfaya dönüşte formu ve skor tablosunu yeniler.
+  void _refreshHomePage() {
+    _nameController.clear();
+    _formKey.currentState?.reset();
+    setState(() {
+      _leaderboardRefreshKey++;
+      _scoresFuture = ScoreRepository.loadScores();
+    });
   }
 
   @override
@@ -32,11 +43,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void _startGame() {
     if (!_formKey.currentState!.validate()) return;
     final name = _nameController.text.trim();
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => GameScreen(playerName: name),
-      ),
-    );
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (_) => GameScreen(playerName: name),
+          ),
+        )
+        .then((_) {
+      if (!mounted) return;
+      _refreshHomePage();
+    });
   }
 
   @override
@@ -80,29 +96,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Widget _buildHeader() {
     return Column(
       children: [
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              colors: [Color(0xFF00C6FF), Color(0xFF7B5FFF)],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF7B5FFF).withOpacity(0.45),
-                blurRadius: 24,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.grid_view_rounded,
-            color: Colors.white,
-            size: 36,
-          ),
-        ),
-        const SizedBox(height: 20),
         const Text(
           'Stratejik Sayı\nBirleştirme',
           textAlign: TextAlign.center,
@@ -279,19 +272,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 ),
               ),
               const Spacer(),
-              Text(
-                'İsme göre',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.45),
-                  fontSize: 11,
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 12),
           Divider(color: Colors.white.withOpacity(0.12), height: 1),
           const SizedBox(height: 12),
           FutureBuilder<List<ScoreEntry>>(
+            key: ValueKey(_leaderboardRefreshKey),
             future: _scoresFuture,
             builder: (context, snap) {
               if (snap.connectionState == ConnectionState.waiting) {
@@ -309,7 +296,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                 );
               }
-              final scores = snap.data ?? [];
+              final scores = List<ScoreEntry>.from(snap.data ?? [])
+                ..sort((a, b) => b.score.compareTo(a.score));
               if (scores.isEmpty) {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),

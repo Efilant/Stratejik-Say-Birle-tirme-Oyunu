@@ -62,27 +62,7 @@ class ScoreRepository {
     return entries;
   }
 
-  /// Meryem — Giriş sayfası için: oyuncu adına göre alfabetik sıralama.
-  static Future<List<ScoreEntry>> loadScoresSortedByName({int? limit}) async {
-    final prefs = await SharedPreferences.getInstance();
-    final entries = await _loadAll(prefs);
-    entries.sort(_compareByNameAsc);
-    if (limit != null && entries.length > limit) {
-      return entries.sublist(0, limit);
-    }
-    return entries;
-  }
-
   static int _compareByScoreDesc(ScoreEntry a, ScoreEntry b) {
-    final scoreCompare = b.score.compareTo(a.score);
-    if (scoreCompare != 0) return scoreCompare;
-    return a.playerName.toLowerCase().compareTo(b.playerName.toLowerCase());
-  }
-
-  static int _compareByNameAsc(ScoreEntry a, ScoreEntry b) {
-    final nameCompare =
-        a.playerName.toLowerCase().compareTo(b.playerName.toLowerCase());
-    if (nameCompare != 0) return nameCompare;
     return b.score.compareTo(a.score);
   }
 

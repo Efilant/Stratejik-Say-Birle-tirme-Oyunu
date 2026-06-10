@@ -34,7 +34,14 @@ class _GameOverOverlayState extends State<GameOverOverlay> {
         score: score,
       );
     }
-    return ScoreRepository.loadScoresSortedByName(limit: 5);
+    return ScoreRepository.loadScores(limit: 5);
+  }
+
+  /// Meryem — Skoru kaydedip ana sayfaya güvenli dönüş.
+  Future<void> _goHome(BuildContext context, int score) async {
+    await _saveAndLoad(score);
+    if (!context.mounted) return;
+    Navigator.of(context).pop(true);
   }
 
   @override
@@ -64,6 +71,7 @@ class _GameOverOverlayState extends State<GameOverOverlay> {
                     levelLabel: _levelLabel(engine.score),
                     topScoresFuture: _topScoresFuture!,
                     onRestart: () => engine.restartGame(),
+                    onGoHome: () => _goHome(context, engine.score),
                   ),
                 ),
               ),
@@ -83,6 +91,7 @@ class _GameOverCard extends StatelessWidget {
   final String levelLabel;
   final Future<List<ScoreEntry>> topScoresFuture;
   final VoidCallback onRestart;
+  final Future<void> Function() onGoHome;
 
   const _GameOverCard({
     required this.playerName,
@@ -90,6 +99,7 @@ class _GameOverCard extends StatelessWidget {
     required this.levelLabel,
     required this.topScoresFuture,
     required this.onRestart,
+    required this.onGoHome,
   });
 
   @override
@@ -207,6 +217,35 @@ class _GameOverCard extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 10),
+          // Meryem — Ana sayfaya dönüş butonu
+          SizedBox(
+            width: double.infinity,
+            child: GestureDetector(
+              onTap: () async => onGoHome(),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.25),
+                    width: 1.5,
+                  ),
+                ),
+                child: const Text(
+                  'Ana Sayfaya Dön',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -239,7 +278,7 @@ class _TopScoresSection extends StatelessWidget {
                 color: Color(0xFFFFD600), size: 16),
             const SizedBox(width: 6),
             Text(
-              'Skor Tablosu (İsme Göre)',
+              'Skor Tablosu',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.80),
                 fontSize: 13,
@@ -266,7 +305,8 @@ class _TopScoresSection extends StatelessWidget {
                 ),
               );
             }
-            final scores = snap.data ?? [];
+            final scores = List<ScoreEntry>.from(snap.data ?? [])
+              ..sort((a, b) => b.score.compareTo(a.score));
             if (scores.isEmpty) {
               return Text(
                 'Henüz kayıt yok.',
